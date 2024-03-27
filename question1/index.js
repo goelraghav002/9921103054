@@ -58,28 +58,46 @@ async function fetchProductDataFromTestServer(category, company) {
   }
 }
 
+// Sort products based on sortBy and sortOrder
+function sortProducts(products, sortBy, sortOrder) {
+  if (sortBy && sortOrder) {
+    products.sort((a, b) => {
+      if (sortOrder === 'asc') {
+        return a[sortBy] - b[sortBy];
+      } else {
+        return b[sortBy] - a[sortBy];
+      }
+    });
+  }
+  return products;
+}
+
+// Apply pagination to products
+function paginateProducts(products, pageSize, pageNumber) {
+  const startIndex = (pageNumber - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  return products.slice(startIndex, endIndex);
+}
 
 app.get('/categories/:category/products', async (req, res) => {
   const { category } = req.params;
+  const { company, n, page, sortBy, sortOrder } = req.query;
 
-  let products = await fetchProductDataFromTestServer(category, "FLP");
+  let products = await fetchProductDataFromTestServer(category, "AMZ");
 
-  // Sort products if sortBy and sortOrder are provided
-  // (You can sort products here if needed)
+  sortProducts(products, sortBy, sortOrder);
 
-  // Apply pagination
-  // (You can apply pagination here if needed)
+  const pageSize = parseInt(n) || 10;
+  const pageNumber = parseInt(page) || 1;
+  products = paginateProducts(products, pageSize, pageNumber);
 
-  // Generate unique ids for products
   const productsWithId = products.map(product => ({
     ...product,
     id: uuidv4()
   }));
 
   res.json(productsWithId);
-  // return res.status(200).json(products);
 });
-
 
 
 const startServer = async () => {
